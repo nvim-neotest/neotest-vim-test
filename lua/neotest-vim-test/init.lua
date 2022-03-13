@@ -2,7 +2,7 @@ local async = require("neotest.async")
 local parse = require("neotest-vim-test.parse")
 local lib = require("neotest.lib")
 
----@type NeotestAdapter
+---@type neotest.Adapter
 local VimTestNeotestAdapter = { name = "neotest-vim-test" }
 
 local get_root = function()
@@ -34,7 +34,7 @@ local get_runner = function(file)
   end)
 end
 
----@param test NeotestPosition
+---@param test neotest.Position
 local function build_cmd(test)
   return in_project_root(function()
     local runner = get_runner(test.path)
@@ -84,8 +84,8 @@ function VimTestNeotestAdapter.discover_positions(path)
 end
 
 ---@async
----@param args NeotestRunArgs
----@return NeotestRunSpec
+---@param args neotest.RunArgs
+---@return neotest.RunSpec
 function VimTestNeotestAdapter.build_spec(args)
   local position = args.tree:data()
   if position.type ~= "test" then
@@ -101,9 +101,9 @@ function VimTestNeotestAdapter.build_spec(args)
 end
 
 ---@async
----@param spec NeotestRunSpec
----@param result NeotestStrategyResult
----@return table<string, NeotestResult>
+---@param spec neotest.RunSpec
+---@param result neotest.StrategyResult
+---@return table<string, neotest.Result>
 function VimTestNeotestAdapter.results(spec, result)
   local pos_id = spec.context.pos_id
   return { [pos_id] = {
@@ -112,7 +112,7 @@ function VimTestNeotestAdapter.results(spec, result)
 end
 
 setmetatable(VimTestNeotestAdapter, {
-  __call = function(_, opts)
+  __call = function()
     return VimTestNeotestAdapter
   end,
 })
