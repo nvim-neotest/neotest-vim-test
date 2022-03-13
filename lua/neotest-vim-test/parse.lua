@@ -1,5 +1,5 @@
 local Tree = require("neotest.types").Tree
-local async = require("plenary.async")
+local async = require("neotest.async")
 
 local function find_match(patterns, text)
   for _, pattern in ipairs(patterns) do
@@ -71,9 +71,11 @@ local function parse_buf_positions(file_path, patterns, lines)
     table.insert(reversed, 1, pos)
   end
   for _, pos in ipairs(reversed) do
-    pos.range[3] = pos_end
-    pos.range[4] = vim.str_utfindex(lines[pos_end + 1])
-    pos_end = pos.range[1] - 1
+    if pos.type ~= "file" then
+      pos.range[3] = pos_end
+      pos.range[4] = vim.str_utfindex(lines[pos_end + 1])
+      pos_end = pos.range[1] - 1
+    end
   end
   return tree
 end

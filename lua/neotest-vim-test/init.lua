@@ -1,4 +1,4 @@
-local async = require("plenary.async")
+local async = require("neotest.async")
 local parse = require("neotest-vim-test.parse")
 local lib = require("neotest.lib")
 
