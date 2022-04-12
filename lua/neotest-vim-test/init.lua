@@ -1,5 +1,6 @@
 local async = require("neotest.async")
 local parse = require("neotest-vim-test.parse")
+local filetype = require("plenary.filetype")
 local lib = require("neotest.lib")
 
 ---@type neotest.Adapter
@@ -9,9 +10,16 @@ local get_root = function()
   return vim.g["test#project_root"]
 end
 
+local ignore_file_types = {}
+
 VimTestNeotestAdapter.root = get_root
 
 function VimTestNeotestAdapter.is_test_file(file_path)
+  local file_type = filetype.detect(file_path)
+  if ignore_file_types[file_type] then
+    return false
+  end
+
   return async.fn["test#test_file"](file_path) == 1
 end
 
@@ -112,7 +120,12 @@ function VimTestNeotestAdapter.results(spec, result)
 end
 
 setmetatable(VimTestNeotestAdapter, {
-  __call = function()
+  __call = function(_, config)
+    if config.ignore_file_types then
+      for _, file_type in ipairs(config.ignore_file_types) do
+        ignore_file_types[file_type] = true
+      end
+    end
     return VimTestNeotestAdapter
   end,
 })
