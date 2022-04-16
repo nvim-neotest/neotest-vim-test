@@ -4,13 +4,15 @@
 Supports running any test runner that is supported by vim-test.
 Any existing vim-test configuration should work out of the box.
 
-Since this adapter will likely overlap with other adapters on files, it is advised to place it last in your neotest adapters list so that it will take lowest priority.
+Requires [vim-test](https://github.com/vim-test/vim-test/) to be installed.
+
+It is recommended to add any filetypes that are covered by another adapter to the ignore list.
 
 ```lua
 require("neotest").setup({
   adapters = {
     ..., -- Any other adapters
-    require("neotest-vim-test")
+    require("neotest-vim-test")({ ignore_filetypes = { "python", "lua" } }),
   }
 })
 ```
