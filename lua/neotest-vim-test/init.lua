@@ -65,7 +65,7 @@ local function build_cmd(test)
     if vim.g["test#transformation"] then
       cmd = vim.g["test#custom_transformations"][vim.g["test#transformation"]](cmd)
     end
-    return cmd
+    return table.concat(cmd, " ")
   end)
 end
 
