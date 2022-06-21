@@ -11,11 +11,15 @@ local get_root = function()
 end
 
 local ignore_file_types = {}
+local allow_file_types = nil
 
 VimTestNeotestAdapter.root = get_root
 
 function VimTestNeotestAdapter.is_test_file(file_path)
   local file_type = filetype.detect(file_path)
+  if allow_file_types and not allow_file_types[file_type] then
+    return false
+  end
   if ignore_file_types[file_type] then
     return false
   end
@@ -124,6 +128,12 @@ setmetatable(VimTestNeotestAdapter, {
     if config.ignore_file_types then
       for _, file_type in ipairs(config.ignore_file_types) do
         ignore_file_types[file_type] = true
+      end
+    end
+    if config.allow_file_types then
+      allow_file_types = {}
+      for _, file_type in ipairs(config.allow_file_types) do
+        allow_file_types[file_type] = true
       end
     end
     return VimTestNeotestAdapter
