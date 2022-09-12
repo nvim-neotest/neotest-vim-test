@@ -27,6 +27,10 @@ function VimTestNeotestAdapter.is_test_file(file_path)
   return async.fn["test#test_file"](file_path) == 1
 end
 
+function VimTestNeotestAdapter.filter_dir(name)
+  return name ~= "node_modules" and name ~= "venv"
+end
+
 local function in_project_root(func)
   local cwd = async.fn.getcwd()
   local root = get_root()
