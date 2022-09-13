@@ -59,7 +59,7 @@ local function build_cmd(test)
     local base_args = async.fn["test#base#build_position"](
       runner,
       "nearest",
-      { file = test.path, line = test.range[1] + 1, col = test.range[2] + 1 }
+      { file = async.fn.fnamemodify(test.path, ":."), line = test.range[1] + 1, col = test.range[2] + 1 }
     )
     local args = async.fn["test#base#options"](runner, base_args)
     args = async.fn["test#base#build_args"](runner, args, "ultest")
