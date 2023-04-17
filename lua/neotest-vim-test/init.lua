@@ -1,4 +1,4 @@
-local async = require("neotest.async")
+local nio = require("nio")
 local logger = require("neotest.logging")
 local Tree = require("neotest.types").Tree
 local parse = require("neotest-vim-test.parse")
@@ -35,7 +35,7 @@ function VimTestNeotestAdapter._is_test_file(file_path)
     return false
   end
 
-  return async.fn["test#test_file"](file_path) == 1
+  return nio.fn["test#test_file"](file_path) == 1
 end
 
 function VimTestNeotestAdapter.filter_dir(name)
@@ -43,7 +43,7 @@ function VimTestNeotestAdapter.filter_dir(name)
 end
 
 local function in_project_root(func)
-  local cwd = async.fn.getcwd()
+  local cwd = nio.fn.getcwd()
   local root = get_root()
   if root then
     vim.cmd("cd " .. root)
@@ -57,7 +57,7 @@ end
 
 local get_runner = function(file)
   return in_project_root(function()
-    return async.fn["test#determine_runner"](file)
+    return nio.fn["test#determine_runner"](file)
   end)
 end
 
@@ -65,24 +65,24 @@ end
 local function build_cmd(test)
   return in_project_root(function()
     local runner = get_runner(test.path)
-    local executable = async.fn["test#base#executable"](runner)
+    local executable = nio.fn["test#base#executable"](runner)
 
     local _args = {
-      file = async.fn.fnamemodify(test.path, ":."),
+      file = nio.fn.fnamemodify(test.path, ":."),
       line = test.range[1] + 1,
       col = test.range[2] + 1,
     }
-    local base_args = async.fn["test#base#build_position"](runner, "nearest", _args)
+    local base_args = nio.fn["test#base#build_position"](runner, "nearest", _args)
     logger.info("Running test", _args, "with base", base_args)
-    local args = async.fn["test#base#options"](runner, base_args)
-    args = async.fn["test#base#build_args"](runner, args, "ultest")
+    local args = nio.fn["test#base#options"](runner, base_args)
+    args = nio.fn["test#base#build_args"](runner, args, "ultest")
 
     local cmd = vim.list_extend(vim.split(executable, " ", { trimempty = true }), args)
 
     cmd = lib.func_util.filter_list(function(val)
       return val ~= ""
     end, cmd)
-    async.util.scheduler()
+    nio.scheduler()
     if vim.g["test#transformation"] then
       cmd = vim.g["test#custom_transformations"][vim.g["test#transformation"]](cmd)
     end
@@ -163,7 +163,7 @@ function VimTestNeotestAdapter._remote_build_spec(tree, extra_args, strategy)
   })
 end
 
-local build_semaphore = async.control.Semaphore.new(1)
+local build_semaphore = nio.control.semaphore()
 
 ---@async
 ---@param args neotest.RunArgs
@@ -174,17 +174,18 @@ function VimTestNeotestAdapter._build_spec(args)
     return
   end
 
-  local permit = build_semaphore:acquire()
-  local bufnr = async.fn.bufadd(position.path)
-  local is_new_buf = not async.api.nvim_buf_is_loaded(bufnr)
-  if is_new_buf then
-    vim.cmd(("noswapfile call bufload(%s)"):format(bufnr))
-  end
-  local command = build_cmd(position)
-  if is_new_buf then
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end
-  permit:forget()
+  local command
+  build_semaphore.with(function()
+    local bufnr = nio.fn.bufadd(position.path)
+    local is_new_buf = not nio.api.nvim_buf_is_loaded(bufnr)
+    if is_new_buf then
+      vim.cmd(("noswapfile call bufload(%s)"):format(bufnr))
+    end
+    command = build_cmd(position)
+    if is_new_buf then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
   return {
     command = command,
     context = {

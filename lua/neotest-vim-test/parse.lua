@@ -1,9 +1,9 @@
 local Tree = require("neotest.types").Tree
-local async = require("neotest.async")
+local nio = require("nio")
 
 local function find_match(patterns, text)
   for _, pattern in ipairs(patterns) do
-    local matches = async.fn.matchlist(text, pattern)
+    local matches = nio.fn.matchlist(text, pattern)
     if matches[1] then
       return matches[2] or matches[1]
     end
@@ -13,7 +13,7 @@ end
 local function parse_buf_positions(file_path, patterns, lines)
   local line_no = 1
   local namespace_indent = -1
-  async.util.scheduler()
+  nio.scheduler()
   local function parse_position_tree(cur_namesspaces)
     local namespace_positions = {}
     while line_no <= #lines do
@@ -58,7 +58,7 @@ local function parse_buf_positions(file_path, patterns, lines)
   table.insert(parsed, 1, {
     type = "file",
     path = file_path,
-    name = async.fn.fnamemodify(file_path, ":t"),
+    name = nio.fn.fnamemodify(file_path, ":t"),
     id = file_path,
     range = { 0, 0, #lines, 0 },
   })
